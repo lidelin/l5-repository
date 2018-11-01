@@ -9,11 +9,15 @@ namespace Prettus\Repository\Helpers;
  */
 class CacheKeys
 {
-
     /**
      * @var string
      */
     protected static $storeFile = "repository-cache-keys.json";
+
+    /**
+     * @var string
+     */
+    protected static $keyStoreKeys = "repository_cache_keys";
 
     /**
      * @var array
@@ -48,13 +52,17 @@ class CacheKeys
             return self::$keys;
         }
 
-        $file = self::getFileKeys();
+        if (config('repository.cache.driver') == 'origin') {
+            $content = cache(self::$keyStoreKeys);
+        } else {
+            $file = self::getFileKeys();
 
-        if (!file_exists($file)) {
-            self::storeKeys();
+            if (!file_exists($file))
+                self::storeKeys();
+
+            $content = file_get_contents($file);
         }
 
-        $content = file_get_contents($file);
         self::$keys = json_decode($content, true);
 
         return self::$keys;
@@ -75,11 +83,15 @@ class CacheKeys
      */
     public static function storeKeys()
     {
-        $file = self::getFileKeys();
         self::$keys = is_null(self::$keys) ? [] : self::$keys;
         $content = json_encode(self::$keys);
 
-        return file_put_contents($file, $content);
+        if (config('repository.cache.driver') == 'origin') {
+            cache()->forever(self::$keyStoreKeys, $content);
+        } else {
+            $file = self::getFileKeys();
+            return file_put_contents($file, $content);
+        }
     }
 
     /**
