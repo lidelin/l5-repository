@@ -44,6 +44,20 @@ class CacheKeys
     }
 
     /**
+     * @param $group
+     *
+     * @return void
+     */
+    public static function forgetKeys($group)
+    {
+        self::loadKeys();
+
+        unset(self::$keys[$group]);
+
+        self::storeKeys();
+    }
+
+    /**
      * @return array|mixed
      */
     public static function loadKeys()
@@ -53,7 +67,7 @@ class CacheKeys
         }
 
         if (config('repository.cache.driver') == 'origin') {
-            $content = cache(self::$keyStoreKeys);
+            self::$keys = cache(self::$keyStoreKeys);
         } else {
             $file = self::getFileKeys();
 
@@ -61,9 +75,9 @@ class CacheKeys
                 self::storeKeys();
 
             $content = file_get_contents($file);
-        }
 
-        self::$keys = json_decode($content, true);
+            self::$keys = json_decode($content, true);
+        }
 
         return self::$keys;
     }
@@ -84,11 +98,11 @@ class CacheKeys
     public static function storeKeys()
     {
         self::$keys = is_null(self::$keys) ? [] : self::$keys;
-        $content = json_encode(self::$keys);
 
         if (config('repository.cache.driver') == 'origin') {
-            cache()->forever(self::$keyStoreKeys, $content);
+            cache()->forever(self::$keyStoreKeys, self::$keys);
         } else {
+            $content = json_encode(self::$keys);
             $file = self::getFileKeys();
             return file_put_contents($file, $content);
         }

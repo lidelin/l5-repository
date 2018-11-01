@@ -60,12 +60,16 @@ class CleanCacheRepository
                 $this->action = $event->getAction();
 
                 if (config("repository.cache.clean.on.{$this->action}", true)) {
-                    $cacheKeys = CacheKeys::getKeys(get_class($this->repository));
+                    $group = get_class($this->repository);
+
+                    $cacheKeys = CacheKeys::getKeys($group);
 
                     if (is_array($cacheKeys)) {
                         foreach ($cacheKeys as $key) {
                             $this->cache->forget($key);
                         }
+
+                        CacheKeys::forgetKeys($group);
                     }
                 }
             }
