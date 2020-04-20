@@ -4,6 +4,7 @@ namespace Prettus\Repository\Criteria;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Prettus\Repository\Contracts\CriteriaInterface;
 use Prettus\Repository\Contracts\RepositoryInterface;
 
@@ -43,6 +44,7 @@ class RequestCriteria implements CriteriaInterface
         $orderBy = $this->request->get(config('repository.criteria.params.orderBy', 'orderBy'), null);
         $sortedBy = $this->request->get(config('repository.criteria.params.sortedBy', 'sortedBy'), 'asc');
         $with = $this->request->get(config('repository.criteria.params.with', 'with'), null);
+        $withCount = $this->request->get(config('repository.criteria.params.withCount', 'withCount'), null);
         $searchJoin = $this->request->get(config('repository.criteria.params.searchJoin', 'searchJoin'), null);
         $sortedBy = !empty($sortedBy) ? $sortedBy : 'asc';
 
@@ -136,7 +138,7 @@ class RequestCriteria implements CriteriaInterface
                      * ex.
                      * products -> product_id
                      */
-                    $prefix = str_singular($sortTable);
+                    $prefix = Str::singular($sortTable);
                     $keyName = $table.'.'.$prefix.'_id';
                 }
 
@@ -160,6 +162,11 @@ class RequestCriteria implements CriteriaInterface
         if ($with) {
             $with = explode(';', $with);
             $model = $model->with($with);
+        }
+
+        if ($withCount) {
+            $withCount = explode(';', $withCount);
+            $model = $model->withCount($withCount);
         }
 
         return $model;
